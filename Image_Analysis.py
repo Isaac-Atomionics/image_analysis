@@ -24,22 +24,22 @@ def gaus(x,b,a,x0,sigma):
 
 
 ''' Set parameters.'''
-image_no = '00161' #Unique Image number you want to analyse. Make sure the date is today's date.
+image_no = '00360' #Unique Image number you want to analyse. Make sure the date is today's date.
 
 num_run = 1 #number of run
 
 #Mention below the starting and end points of x and Z ROI. This wil also be used to plot two red lines showing the region
-ROI_x_start = 1200
-ROI_x_end = 1600
-ROI_z_start = 800
-ROI_z_end = 1200
+ROI_x_start = 500
+ROI_x_end = 750
+ROI_z_start = 400
+ROI_z_end = 750
 cbarlim=(0,1.0) #set your colour bar limit for scaled image
 
 ROI_x_size = ROI_x_end-ROI_x_start
 ROI_z_size = ROI_z_end-ROI_z_start
 
 # Save path to images folder
-savepath = 'C:/Users/Atomionics/Desktop/Image_Analysis/'
+savepath = 'C:/Users/Atomionics/Desktop/Image_Analysis/image_analysis/'
 folder_date = datetime.now().strftime("%Y-%m-%d")
 folder_to_save_files = savepath 
 a = "a"
@@ -157,14 +157,15 @@ def plot_im():
     sum_x = np.sum(OD, axis = 0)
     n = len(sum_x)
     x = np.linspace(1,n,n)
-    # value_to_find = imin + (np.max(sum_x)-imin)*1/np.exp(1)
-    # print(np.max(sum_x))
+    x_val_to_find = imin + (np.max(sum_x)-imin)*1/np.exp(1)
+    a_x = np.where(x>=x_val_to_find)
+    
     if np.max(sum_x)<=0:
         in_max_x = n/2
         print("np.max(sum_x) is negative!")
     else:
         in_max_x = np.where(x==round(np.max(sum_x)))[0][0]
-    fit_x,pcov = curve_fit(gaus,x,sum_x,p0=[imin,np.max(sum_x)-imin,in_max_x,1])
+    fit_x,pcov = curve_fit(gaus,x,sum_x,p0=[imin,np.max(sum_x),in_max_x,len(a_x[0])/2])
         # Measure of the fitting accuracy for the horizontal cross-section
 
 
@@ -175,13 +176,16 @@ def plot_im():
     sum_z = np.sum(OD, axis = 1)
     n = len(sum_z)
     z = np.linspace(1,n,n)
-    # print(np.max(sum_z))
+    z_val_to_find = imin + (np.max(sum_z)-imin)*1/np.exp(1)
+    a_z = np.where(z>=z_val_to_find)
+
+    
     if np.max(sum_z)<=0:
         in_max_z = n/2
         print("np.max(sum_z) is negative!")
     else:
         in_max_z = np.where(z==round(np.max(sum_z)))[0][0]
-    fit_z,pcov = curve_fit(gaus,z,sum_z,p0=[imin,np.max(sum_z)-imin,in_max_z,1])
+    fit_z,pcov = curve_fit(gaus,z,sum_z,p0=[imin,np.max(sum_z),in_max_z,len(a_z[0])/2])
        # Measure of the fitting accuracy for the vertical cross-section
     err_z = sqrt(abs(pcov[3,3]))/fit_z[3]
     print("OD z  fit done")  
@@ -199,14 +203,14 @@ def plot_im():
     x = np.linspace(1,len(cross_x), len(cross_x))
     z = np.linspace(1,len(cross_z), len(cross_z))
        # Gaussian fitting of those cross sections
-    cross_x_fit,pcov = curve_fit(gaus,x,cross_x,p0=[imin, np.max(cross_x)-imin,len(cross_x)/2,1])
-    cross_z_fit,pcov = curve_fit(gaus,z,cross_z,p0=[imin, np.max(cross_z)-imin,len(cross_z)/2,1])
+    cross_x_fit,pcov = curve_fit(gaus,x,cross_x,p0=[imin, np.max(cross_x),len(cross_x)/2,1])
+    cross_z_fit,pcov = curve_fit(gaus,z,cross_z,p0=[imin, np.max(cross_z),len(cross_z)/2,1])
     print("OD second  fit done")  
     ROI_sum=0
     for row in range(ROI_x_start,ROI_x_end):
         for col in range(ROI_z_start, ROI_z_end):
             ROI_sum = OD[row, col] + ROI_sum
-    print(ROI_sum)
+    print("ROI Sum = " + str(ROI_sum))
     
     points_x = [ROI_x_start, ROI_x_end]
     points_z = [ROI_z_start+(ROI_z_size/2), ROI_z_start+(ROI_z_size/2)]
@@ -229,7 +233,6 @@ def plot_im():
     plt.plot(zpixels,cross_z,'--')
     plt.plot(zpixels,fit_zl,'--')
      
-    print("OD x  fit done")  
     plt.subplot(2,3,1)
     plt.title("Colour Scaled \n OD ROI_Sum = %i"  %ROI_sum,  fontsize=12)
     #plt.ylabel("OD")
@@ -255,7 +258,6 @@ def plot_im():
     IoverIs_sp1 = Imeas/Isat
     sigma0 = 3*lam**2/(2*pi)
     sigmatotal=sigma0/(1+2*IoverIs_sp1+4*(detun/gam)**2)
-    print(sigmatotal)
     sigma_x = cross_x_fit[3]*px_eff
     sigma_z = cross_z_fit[3]*px_eff     
     N_OD = 2*ODpk*pi*sigma_x*sigma_z/sigmatotal
@@ -265,9 +267,9 @@ def plot_im():
     plt.text(0, 0.85, "Image #: %05s" % (image_no))
     plt.text(0, 0.6, "Important Parameters:")
     plt.text(0, 0.55, "OD = " + str(round(ODpk,3)))
-    plt.text(0, 0.50, "$\sigma_{x}$ = " + str(round(sigma_x,9)*10**6)+"mm")
-    plt.text(0, 0.45, "$\sigma_{z}$ = " + str(round(sigma_z,9)*10**6)+"mm")
-    plt.text(0, 0.40, "$N_{OD}$ = " + str(round(N_OD,3)))
+    plt.text(0, 0.50, "$\sigma_{x}$ = " + str(round(sigma_x,6)*10**6)+"mm")
+    plt.text(0, 0.45, "$\sigma_{z}$ = " + str(round(sigma_z,6)*10**6)+"mm")
+    plt.text(0, 0.40, "$N_{OD}$ = " + str(round(N_OD)))
     plt.axis('off')
                
        #save image
