@@ -140,10 +140,11 @@ def plot_im():
     #    with np.printoptions(threshold=np.inf):
       
     #Plot OD on 2,2,1
-    fig = plt.figure(figsize=(12,8))
+    fig = plt.figure(figsize=(15,10))
     plt.subplot(2,3,5)
     plt.title("Colour Unscaled")
     plt.xlabel("Pixels")
+    plt.ylabel("Pixels")
 
        #plt.title("OD plot - full scale")
        # plt.xlabel("x")
@@ -237,6 +238,7 @@ def plot_im():
     plt.title("Colour Scaled \n OD ROI_Sum = %i"  %ROI_sum,  fontsize=12)
     #plt.ylabel("OD")
     plt.xlabel("Pixels")
+    plt.ylabel("Pixels")
     plt.plot(points_x, points_z, linestyle='dashed',linewidth=0.5, color='red')
     plt.plot(points_x2, points_z2, linestyle='dashed',linewidth=0.5, color='red')
     plt.plot([ROI_x_start,ROI_x_end], [ROI_z_start,ROI_z_start], linestyle='solid',linewidth=0.5, color='red')
@@ -267,7 +269,7 @@ def plot_im():
     Nx = areax*px_size**2/sigmatotal
     Nz = areaz*px_size**2/sigmatotal
 
-
+    
 
     plt.subplot(2,3,3)
     plt.text(0, 0.8, "Date: " +folder_date)
@@ -276,9 +278,9 @@ def plot_im():
     plt.text(0, 0.55, "OD = " + str(round(ODpk,3)))
     plt.text(0, 0.50, "$\sigma_{x}$ = " + str(round(sigma_x,6)*10**6)+"mm")
     plt.text(0, 0.45, "$\sigma_{z}$ = " + str(round(sigma_z,6)*10**6)+"mm")
-    plt.text(0, 0.40, "$N_{OD}$ = " + str(round(N_OD)))
-    plt.text(0, 0.35, "$N_{x}$ =  " + str(round(Nx)))
-    plt.text(0, 0.30, "$N_{z}$ =  " + str(round(Nz)))
+    plt.text(0, 0.40, "$N_{OD}$ = " + str(round(N_OD/(10**6),1)) + "*$10^{6}$ atoms") 
+    plt.text(0, 0.35, "$N_{x}$ =  " + str(round(Nx/(10**6),1)) + "$*10^{6}$ atoms")
+    plt.text(0, 0.30, "$N_{z}$ =  " + str(round(Nz/(10**6),1)) + "$*10^{6}$ atoms")
     plt.axis('off')
                
        #save image
