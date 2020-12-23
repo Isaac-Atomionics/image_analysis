@@ -23,14 +23,21 @@ def gaus(x,b,a,x0,sigma):
     return b+a*np.exp(-(x-x0)**2/(2*sigma**2))
 
 
-#%%Set parameters
-image_no = '00360' #Unique Image number you want to analyse. Make sure the date on the file's name is today's date.
-num_run = 1 #number of runs
+#%%IMPORTANT PARAMETERS TO SET!!!!!!!!@@@@@@@@@@@@@@
 
-#Mention below the starting and end points of x and Z ROI. This wil also be used to plot two red lines showing the region
+
+folder_date = "2020-12-23" #Input the date that the image is from!!!!
+image_no = "00359" #Unique Image number you want to analyse. Make sure the date on the file's name is today's date.
+
+
+num_run = 1 #Should be run, since the code has not evolved to perform batch processing yet
+
+#Mention below the starting and end points of x and Z ROI. This wil also be used to see the ROI on the plot
 ROI_x = [450,750]
 ROI_z = [350,750]
+
 cbarlim=(0,1.0) #set your colour bar limit for scaled image
+savepath = "C:/Users/Atomionics/Desktop/Image_Analysis/image_analysis/"
 
 #%%
 ROI_x_start = ROI_x[0]
@@ -41,8 +48,6 @@ ROI_x_size = ROI_x_end-ROI_x_start
 ROI_z_size = ROI_z_end-ROI_z_start
 
 # Save path to images folder
-savepath = 'C:/Users/Atomionics/Desktop/Image_Analysis/image_analysis/'
-folder_date = datetime.now().strftime("%Y-%m-%d")
 folder_to_save_files = savepath 
 a = "a"
 b = "b"
@@ -282,7 +287,7 @@ def proc_im():
 
       #%% Export parameters of interest
      
-    headline = ['Image #', 'filename','Placeholder','sigma_x','sigma_z','X Pos','Z Pos',"N_OD","N_x","N_z","N_pxsum0","Peak OD"]
+    headline = ['Image #', 'filename','Placeholder','sigma_x','sigma_z','X Pos','Z Pos',"N_OD","N_x","N_z","N_pxsum","Peak OD"]
       # If the csv file does not exist yet, creates it with its header
     if not os.path.exists(savepath + folder_date + "-Data00000.csv"):
         with open(savepath + folder_date +  '-Data00000.csv', 'x', newline = '') as file:
