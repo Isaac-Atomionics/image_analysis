@@ -262,6 +262,13 @@ def plot_im():
     sigma_z = cross_z_fit[3]*px_eff     
     N_OD = 2*ODpk*pi*sigma_x*sigma_z/sigmatotal
 
+    areax = np.sum(sum_x-imin)
+    areaz = np.sum(sum_z-imin)
+    Nx = areax*px_size**2/sigmatotal
+    Nz = areaz*px_size**2/sigmatotal
+
+
+
     plt.subplot(2,3,3)
     plt.text(0, 0.8, "Date: " +folder_date)
     plt.text(0, 0.85, "Image #: %05s" % (image_no))
@@ -270,6 +277,8 @@ def plot_im():
     plt.text(0, 0.50, "$\sigma_{x}$ = " + str(round(sigma_x,6)*10**6)+"mm")
     plt.text(0, 0.45, "$\sigma_{z}$ = " + str(round(sigma_z,6)*10**6)+"mm")
     plt.text(0, 0.40, "$N_{OD}$ = " + str(round(N_OD)))
+    plt.text(0, 0.35, "$N_{x}$ =  " + str(round(Nx)))
+    plt.text(0, 0.30, "$N_{z}$ =  " + str(round(Nz)))
     plt.axis('off')
                
        #save image
