@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Dec 21 17:28:58 2020
- 
-@author: Atomionics
-"""
 from datetime import datetime
 import os
 from math import pi
@@ -17,18 +11,12 @@ import scipy.misc as mpl
 import csv
 #from os import path
 import matplotlib.pyplot as plt
-from PIL import Image  
-
-def gaus(x,b,a,x0,sigma):
-    return b+a*np.exp(-(x-x0)**2/(2*sigma**2))
 
 
 #%%IMPORTANT PARAMETERS TO SET!!!!!!!!@@@@@@@@@@@@@@
-
-
 folder_date = "2020-12-23" #Input the date that the image is from!!!!
-image_no = "00359" #Unique Image number you want to analyse. Make sure the date on the file's name is today's date.
-
+image_no = "00359" 
+#Unique Image number you want to analyse. Make sure the date on the file's name is today's date.
 
 num_run = 1 #Should be run, since the code has not evolved to perform batch processing yet
 
@@ -39,7 +27,15 @@ ROI_z = [350,750]
 cbarlim=(0,1.0) #set your colour bar limit for scaled image
 savepath = "C:/Users/Atomionics/Desktop/Image_Analysis/image_analysis/"
 
-#%%
+#%% Defining Variables
+folder_to_save_files = savepath 
+if not os.path.exists(folder_to_save_files):
+    os.mkdir(folder_to_save_files)
+
+a = "a"
+b = "b"
+c = "c"
+
 ROI_x_start = ROI_x[0]
 ROI_x_end = ROI_x[1]
 ROI_z_start = ROI_z[0]
@@ -47,15 +43,11 @@ ROI_z_end = ROI_z[1]
 ROI_x_size = ROI_x_end-ROI_x_start
 ROI_z_size = ROI_z_end-ROI_z_start
 
-# Save path to images folder
-folder_to_save_files = savepath 
-a = "a"
-b = "b"
-c = "c"
-if not os.path.exists(folder_to_save_files):
-    os.mkdir(folder_to_save_files)
-    
-#%% Rubidium properties
+kB = 1.38e-23
+muB = 9.27e-24
+h = 6.63e-34
+ 
+### Rubidium properties
 amu = 1.66053873e-27    
 isotope = 85
 
@@ -77,7 +69,7 @@ elif isotope == 87:
     threebodyloss = 0  # m^6/s
 
 
-#%% Supposedly imported from the GUI 
+### Supposedly imported from the GUI 
 
 px_size = 5.5e-6
 binning = 1
@@ -90,11 +82,6 @@ IoverIs = I/Isat
 delta = 0
 
 ROI_sum=0
-#%% Constants definition
-
-kB = 1.38e-23
-muB = 9.27e-24
-h = 6.63e-34
 
 #%% Importation of the 3 images
 
@@ -107,14 +94,19 @@ else:
     lastImageName = dirInfo[(sizeDirInfo-1)]
     # lastImageNum = float(lastImageName[15:20]) + 1
     
-''' Saving images. '''
+#%% Define functions
+
+def gaus(x,b,a,x0,sigma):
+    return b+a*np.exp(-(x-x0)**2/(2*sigma**2))
+
+#%%%
 def proc_im():
     img_at = cv2.imread(savepath + folder_date + "-img_%05s_a.png" % (image_no),0) # With atom                    
     img_las = cv2.imread(savepath + folder_date + "-img_%05s_b.png" % (image_no),0) # Laser alone
     img_bck = cv2.imread(savepath + folder_date + "-img_%05s_c.png" % (image_no),0) # Background
 
             
-#%% Creation of the 2D array of optical depths
+### Creation of the 2D array of optical depths
 
 # Substraction of the background
     img_las = img_las - img_bck
@@ -304,6 +296,6 @@ def proc_im():
         writer = csv.writer(file, dialect = 'excel', quoting = csv.QUOTE_NONE)
         writer.writerow(parameters)
 
-
+#%%
 for i in range(num_run):
     proc_im()
