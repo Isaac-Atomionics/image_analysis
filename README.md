@@ -1,8 +1,8 @@
 # Image Analysis Scripts
 
-## Image_analysis.py,
-## batch.py
-## batch_fl.py
+### Image_analysis.py,
+### batch.py
+### batch_fl.py
 
 This script opens the AI images (a,b,c) in the same folder and performs some fitting and finally outputs a image (d) with plots and important parameters. 
 This code can be run directly from Spyder and the images can be displayed in the python console in spyder. If the console doesnt display the image, you need to enable it by following this steps.
@@ -22,17 +22,22 @@ Things that need to be changed manually:
 If you get this error: "TypeError: unsupported operand type(s) for -: 'NoneType' and 'NoneType'", its a filenaming problem, where the code is not reading the images properly and returning nontype.
 FIX: check and make sure the image number and folderdate is correct
 
+#############################################################
+
 # Image Acquisition Scripts
 
-## 3images_AI.py
-## 1image_Fluo.py
-## live.py
+### 3images_AI.py
+### 1image_Fluo.py
 
 These 2 scripts basically initialises the camera and instructs it to wait for triggers from ARTIQ. They each take 3 and 1 iamges respectively and save the images in the same folder with unique identifying image numbers.
 You can tell which images are which from the file names with AI (a,b,c) and Fluo (fl).
 
 Things that need to be changed manually:
 Save directory location, remember put the script in that folder.
+
+### live.py
+
+This script is a live acquisition+AI script that tells the camera to wait for trigger, and processes the image and outputs a image d and restarts, waiting for another trigger.
 
 
 
