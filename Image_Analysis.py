@@ -143,12 +143,12 @@ def proc_im():
     n = len(sum_x)
     x = np.linspace(1,n,n)
     x_val_to_find = imin + (np.max(sum_x)-imin)*1/np.exp(1)
-    a_x = np.where(x>=x_val_to_find)
+    a_x = np.where(sum_x>=x_val_to_find)
     if np.max(sum_x)<=0:
         in_max_x = n/2
         print("np.max(sum_x) is negative!")
     else:
-        in_max_x = np.where(x==round(np.max(sum_x)))[0][0]
+        in_max_x = np.where(sum_x==np.max(sum_x))[0][0]
     fit_x,pcov = curve_fit(gaus,x,sum_x,p0=[imin,np.max(sum_x),in_max_x,len(a_x[0])/2])
     # Measure of the fitting accuracy for the horizontal cross-section
     err_x = sqrt(abs(pcov[3,3]))/fit_x[3]
@@ -159,12 +159,12 @@ def proc_im():
     n = len(sum_z)
     z = np.linspace(1,n,n)
     z_val_to_find = imin + (np.max(sum_z)-imin)*1/np.exp(1)
-    a_z = np.where(z>=z_val_to_find)
+    a_z = np.where(sum_z>=z_val_to_find)
     if np.max(sum_z)<=0:
         in_max_z = n/2
         print("np.max(sum_z) is negative!")
     else:
-        in_max_z = np.where(z==round(np.max(sum_z)))[0][0]
+        in_max_z = np.where(sum_z==np.max(sum_z))[0][0]
     fit_z,pcov = curve_fit(gaus,z,sum_z,p0=[imin,np.max(sum_z),in_max_z,len(a_z[0])/2])
     # Measure of the fitting accuracy for the vertical cross-section
     err_z = sqrt(abs(pcov[3,3]))/fit_z[3]
