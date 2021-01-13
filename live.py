@@ -7,9 +7,6 @@ from math import sqrt
 import numpy as np
 import cv2
 from scipy.optimize import curve_fit
-from scipy.optimize import fmin
-from scipy import exp
-import scipy.misc as mpl
 import csv
 #from os import path
 import matplotlib.pyplot as plt
@@ -300,7 +297,7 @@ def proc_im():
         in_max_x = np.where(sum_x==np.max(sum_x))[0][0]
     fit_x,pcov = curve_fit(gaus,x,sum_x,p0=[imin,np.max(sum_x),in_max_x,len(a_x[0])/2])
     # Measure of the fitting accuracy for the horizontal cross-section
-    err_x = sqrt(abs(pcov[3,3]))/fit_x[3]
+    # err_x = sqrt(abs(pcov[3,3]))/fit_x[3]
     print("OD x  fit done")       
     #%% Fitting along the z axis (integrated over all x values)
     # Gaussian fitting to get the width
@@ -316,7 +313,7 @@ def proc_im():
         in_max_z = np.where(sum_z==np.max(sum_z))[0][0]
     fit_z,pcov = curve_fit(gaus,z,sum_z,p0=[imin,np.max(sum_z),in_max_z,len(a_z[0])/2])
     # Measure of the fitting accuracy for the vertical cross-section
-    err_z = sqrt(abs(pcov[3,3]))/fit_z[3]
+    # err_z = sqrt(abs(pcov[3,3]))/fit_z[3]
     print("OD z  fit done")  
     #%% Global peak optical depths
       
@@ -347,7 +344,7 @@ def proc_im():
     points_x2= [ROI_x_start + (ROI_x_size/2), ROI_x_start + (ROI_x_size/2)]
         
     #%%Plotting
-    fig = plt.figure(figsize=(15,10))
+    plt.figure(figsize=(15,10))
     plt.subplot(2,3,5)
     plt.title("Colour Unscaled")
     plt.xlabel("Pixels")
