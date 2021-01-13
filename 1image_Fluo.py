@@ -3,6 +3,8 @@ from pypylon import genicam
 from datetime import datetime
 import os
 import cv2
+import matplotlib.pyplot as plt
+
 #from os import path
 
 img = pylon.PylonImage()
@@ -134,7 +136,13 @@ def acquire_img():
                 # image object).
                 img.Release()
                 img_fl = cv2.imread(filename,0) # With atom
-                                           
+                #%% Comment out this portion to stop displaying image
+                plt.figure(figsize=(15,10))
+                plt.imshow(img_fl)
+                plt.colorbar()
+                plt.clim(0,0.5)
+                plt.show()     
+                 #%%                          
         cam.StopGrabbing()
         cam.Close()
         
