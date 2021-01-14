@@ -10,8 +10,8 @@ import matplotlib.pyplot as plt
 
 
 #%%IMPORTANT PARAMETERS TO SET!!!!!!!!@@@@@@@@@@@@@@
-folder_date = "2021-01-11" #Input the date that the image is from!!!!
-batch_no = ["00031","00032","00033","00034","00035","00036","00037","00038","00039","00040"]
+folder_date = "2021-01-13" #Input the date that the image is from!!!!
+batch_no = ["00337","00339","00342","00349","00351","00353","00356","00358","00360","00255"]
 #Array of image numbers to be analysed
 
 num_run = 1 #Should be run, since the code has not evolved to perform batch processing yet
@@ -21,7 +21,7 @@ ROI_x = [0,960]
 ROI_z = [0,960]
 
 cbarlim=(0,1.0) #set your colour bar limit for scaled image
-savepath = "C:/Users/Atomionics/Desktop/test/cloud_expansion_11012021/"
+savepath = "C:/Users/Atomionics/Desktop/test/"
 
 #%% Defining Variables
 folder_to_save_files = savepath 
@@ -97,7 +97,7 @@ def gaus(x,b,a,x0,sigma):
 
 #%%%
 def batch_proc():
-    img_at = cv2.imread(savepath + folder_date + "-img_%05s_a.png" % (image_no),0) # With atom                    
+    img_at = cv2.imread(savepath + folder_date + "-img_%05s_fl.png" % (image_no),0) # With atom                    
 
             
 ### Creation of the 2D array of optical depths
@@ -239,17 +239,20 @@ def batch_proc():
     detun = 0
     IoverIs_sp1 = Imeas/Isat
     sigma0 = 3*lam**2/(2*pi)
-    sigmatotal=sigma0/(12589349+2*IoverIs_sp1+4*(detun/gam)**2)
+    sigmatotal=sigma0/(1+2*IoverIs_sp1+4*(detun/gam)**2)
     sigma_x = cross_x_fit[3]*px_eff
     sigma_z = cross_z_fit[3]*px_eff     
     N_OD = 2*ODpk*pi*sigma_x*sigma_z/sigmatotal
-
+    
+    x_center = np.where(fit_xl==np.max(fit_xl))[0][0]
+    z_center = np.where(fit_zl==np.max(fit_zl))[0][0]
+                        
     areax = np.sum(sum_x-imin)
     areaz = np.sum(sum_z-imin)
     Nx = areax*px_size**2/sigmatotal
     Nz = areaz*px_size**2/sigmatotal
     Npxsum = ROI_sum*px_size**2/sigmatotal
-
+    
     plt.subplot(2,3,3)
     plt.text(-0.1, 0.9, "Image #: %05s" % (image_no), fontsize=30)
     plt.text(-0.1, 0.8, "Date: " +folder_date, fontsize=30)
@@ -261,6 +264,8 @@ def batch_proc():
     plt.text(-0.1, 0.10, "$N_{x}$ =  " + str(round(Nx/(10**6),1)) + "$*10^{6}$ atoms", fontsize=15)
     plt.text(-0.1, 0.00, "$N_{z}$ =  " + str(round(Nz/(10**6),1)) + "$*10^{6}$ atoms", fontsize=15)
     plt.text(-0.1, -0.10, "$N_{px sum}$ =  " + str(round(Npxsum/(10**6),1)) + "$*10^{6}$ atoms", fontsize=15)
+    plt.text(-0.1, -0.20, "X Center = " + str(x_center) +" px", fontsize=15)
+    plt.text(-0.1, -0.30, "Z Center = " + str(z_center) +" px", fontsize=15)
     plt.axis('off')
                
        #save image
@@ -270,7 +275,7 @@ def batch_proc():
     print(image)
       #%% Export parameters of interest
     timeofflight = image*2/1000 
-    headline = ['Image #', 'filename','Time of Flight','sigma_x','sigma_z','X Pos','Z Pos',"N_OD","N_x","N_z","N_pxsum","Peak OD"]
+    headline = ['Image #', 'filename','Time of Flight','X Center','Z Center','sigma_x','sigma_z','ROI X','ROI Z',"N_OD","N_x","N_z","N_pxsum","Peak OD"]
       # If the csv file does not exist yet, creates it with its header
     if not os.path.exists(savepath + folder_date + "-Data00000.csv"):
         with open(savepath + folder_date +  '-Data00000.csv', 'x', newline = '') as file:
@@ -281,7 +286,7 @@ def batch_proc():
         reader = csv.reader(file, dialect = 'excel')
         rows = list(reader)
         line_num = len(rows)
-    parameters = [image_no,filename, timeofflight, sigma_x,sigma_z,str(ROI_x[0])+"-"+str(ROI_x[1]),str(ROI_z[0])+"-"+str(ROI_z[1]), N_OD, Nx, Nz, Npxsum, ODpk]
+    parameters = [image_no,filename, timeofflight,x_center,z_center, sigma_x,sigma_z,str(ROI_x[0])+"-"+str(ROI_x[1]),str(ROI_z[0])+"-"+str(ROI_z[1]), N_OD, Nx, Nz, Npxsum, ODpk]
       # Adds the new set of parameters following the existing lines
     with open(savepath + folder_date + '-Data00000.csv', 'a', newline = '') as file:
         writer = csv.writer(file, dialect = 'excel', quoting = csv.QUOTE_NONE)

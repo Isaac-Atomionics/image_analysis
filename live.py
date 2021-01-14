@@ -398,6 +398,9 @@ def proc_im():
     sigma_z = cross_z_fit[3]*px_eff     
     N_OD = 2*ODpk*pi*sigma_x*sigma_z/sigmatotal
 
+    x_center = np.where(fit_xl==np.max(fit_xl))[0][0]
+    z_center = np.where(fit_zl==np.max(fit_zl))[0][0]
+
     areax = np.sum(sum_x-imin)
     areaz = np.sum(sum_z-imin)
     Nx = areax*px_size**2/sigmatotal
@@ -415,6 +418,8 @@ def proc_im():
     plt.text(-0.1, 0.10, "$N_{x}$ =  " + str(round(Nx/(10**6),1)) + "$*10^{6}$ atoms", fontsize=15)
     plt.text(-0.1, 0.00, "$N_{z}$ =  " + str(round(Nz/(10**6),1)) + "$*10^{6}$ atoms", fontsize=15)
     plt.text(-0.1, -0.10, "$N_{px sum}$ =  " + str(round(Npxsum/(10**6),1)) + "$*10^{6}$ atoms", fontsize=15)
+    plt.text(-0.1, -0.20, "X Center = " + str(x_center) +" px", fontsize=15)
+    plt.text(-0.1, -0.30, "Z Center = " + str(z_center) +" px", fontsize=15)
     plt.axis('off')
                
        #save image
@@ -424,8 +429,8 @@ def proc_im():
      
 
       #%% Export parameters of interest
-     
-    headline = ['Image #', 'filename','Placeholder','sigma_x','sigma_z','X Pos','Z Pos',"N_OD","N_x","N_z","N_pxsum","Peak OD"]
+    timeofflight = image*2/1000 
+    headline = ['Image #', 'filename','Time of Flight','X Center','Z Center','sigma_x','sigma_z','ROI X','ROI Z',"N_OD","N_x","N_z","N_pxsum","Peak OD"]
       # If the csv file does not exist yet, creates it with its header
     if not os.path.exists(savepath + folder_date + "-Data00000.csv"):
         with open(savepath + folder_date +  '-Data00000.csv', 'x', newline = '') as file:
@@ -436,14 +441,14 @@ def proc_im():
         reader = csv.reader(file, dialect = 'excel')
         rows = list(reader)
         line_num = len(rows)
-    parameters = [image_no,filename,'Nan', sigma_x,sigma_z,str(ROI_x[0])+"-"+str(ROI_x[1]),str(ROI_z[0])+"-"+str(ROI_z[1]), N_OD, Nx, Nz, Npxsum, ODpk]
+    parameters = [image_no,filename, timeofflight,x_center,z_center, sigma_x,sigma_z,str(ROI_x[0])+"-"+str(ROI_x[1]),str(ROI_z[0])+"-"+str(ROI_z[1]), N_OD, Nx, Nz, Npxsum, ODpk]
       # Adds the new set of parameters following the existing lines
     with open(savepath + folder_date + '-Data00000.csv', 'a', newline = '') as file:
         writer = csv.writer(file, dialect = 'excel', quoting = csv.QUOTE_NONE)
         writer.writerow(parameters)
 
 #%%
-for i in range(num_run):
+for image in range(num_run):
     acquire_img()
     proc_im()
     plt.show
