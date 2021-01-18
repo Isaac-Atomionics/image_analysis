@@ -1,3 +1,6 @@
+from pypylon import pylon
+from pypylon import genicam
+from datetime import datetime
 import os
 from math import pi
 from math import sqrt
@@ -10,35 +13,26 @@ import matplotlib.pyplot as plt
 
 
 #%%IMPORTANT PARAMETERS TO SET!!!!!!!!@@@@@@@@@@@@@@
-cbarlim=(0,1.0) #set your colour bar limit for scaled image
-savepath = "C:/Users/Atomionics/Desktop/test/"
 
-
-folder_date = "2021-01-15" #Input the date that the image is from!!!!
-
-### IF YOU WANT TO MANUALLY CHOOSE IMAGES
-# batch_no = ["00050","00051","00052","00053","00054","00055","00056","00057","00058","00059","00060","00061","00062","00063","00064"]
-# OR
-## IF YOU WANT TO PROCESS ALL IMAGES IN THE FOLDER
-allfiles = os.listdir(savepath)
-batch_no = []
-for file in allfiles:
-    if file.endswith("fl.png"):
-        batch_no.append(file[15:20])
-###      
-        
-#Array of image numbers to be analysed
-
-num_run = 1 #Should be run, since the code has not evolved to perform batch processing yet
+num_run = 1000
 
 #Mention below the starting and end points of x and Z ROI. This wil also be used to see the ROI on the plot
-ROI_x = [0,960]
-ROI_z = [0,960]
+ROI_x = [1000,1700]
+ROI_z = [1000,1700]
+
+cbarlim=(0,1.0) #set your colour bar limit for scaled image
+savepath = "" ## CHANGE THIS
+
+
 
 #%% Defining Variables
+folder_date = datetime.now().strftime("%Y-%m-%d")
 folder_to_save_files = savepath 
-if not os.path.exists(folder_to_save_files):
-    os.mkdir(folder_to_save_files)
+if not os.path.exists(savepath):
+    os.mkdir(savepath)
+
+img = pylon.PylonImage()
+tlf = pylon.TlFactory.GetInstance()
 
 a = "a"
 b = "b"
@@ -54,7 +48,7 @@ ROI_z_size = ROI_z_end-ROI_z_start
 kB = 1.38e-23
 muB = 9.27e-24
 h = 6.63e-34
- 
+
 ### Rubidium properties
 amu = 1.66053873e-27    
 isotope = 85
@@ -75,13 +69,12 @@ elif isotope == 87:
     scatleng = 0 # Bohr radii
     scattXsection = 8*pi*(scatleng*5.29e-11)**2  #m^2
     threebodyloss = 0  # m^6/s
-
-
+    
 ### Supposedly imported from the GUI 
 
-px_size = 3.75e-6
+px_size = 5.5e-6
 binning = 1
-magnif = 1.067
+magnif = 0.38
 px = px_size*binning
 px_eff = px/magnif
 tof =40e3
@@ -91,33 +84,184 @@ delta = 0
 
 ROI_sum=0
 
-#%% Importation of the 3 images
-
-dirInfo = os.listdir(savepath)    
-sizeDirInfo = len(dirInfo)
-
-if sizeDirInfo == 0:
-    lastImageNum = 1
-else:
-    lastImageName = dirInfo[(sizeDirInfo-1)]
-    # lastImageNum = float(lastImageName[15:20]) + 1
-    
 #%% Define functions
 
 def gaus(x,b,a,x0,sigma):
     return b+a*np.exp(-(x-x0)**2/(2*sigma**2))
 
 #%%%
-def batch_proc():
-    img_at = cv2.imread(savepath + folder_date + "-img_%05s_fl.png" % (image_no),0) # With atom                    
+def acquire_img():
+    info=pylon.DeviceInfo()
+    info.SetSerialNumber("22943480") #22943480, 23103825
+    # Create an instant camera object with the camera device found first.
+    cam = pylon.InstantCamera(tlf.CreateFirstDevice())
+    # Print the model name of the camera.
+    print("Device:", cam.GetDeviceInfo().GetModelName())
+    
+    
+    # Need camera open to make changes to acqusition
+    cam.Open()
+    # In order to make sure the payload error doesn't appear
+    cam.DeviceLinkThroughputLimitMode='Off'
+    
+    # Pixel format of images taken
+    cam.PixelFormat='Mono8'
+    #cam.PixelFormat='Mono12'
+    print('Pixel Format:',cam.PixelFormat.GetValue())
+    # Acquisition mode set to continuous so will take images while there are still triggers
+    cam.AcquisitionMode='Continuous'
+    print('Acquisition Mode:',cam.AcquisitionMode.GetValue())
+      
+    # Set camera Gamma value to 1, so brightness is unchanged
+    cam.Gamma=1
+    print('Gamma:',cam.Gamma.GetValue())
+    # Set black level of images
+    cam.BlackLevel=0
+    print('Black Level:',cam.BlackLevel.GetValue())
+    
+    # Binning of the pixels, to increase camera response to light
+    # Set horizontal and vertical separately, any combination allowed
+    cam.BinningHorizontal=1
+    cam.BinningVertical=1
+    print('Binning (HxV):',cam.BinningHorizontal.GetValue(), 'x', cam.BinningVertical.GetValue())
+    # Set gain, range 0-23.59 dB. Gain auto must be turned off
+    cam.GainAuto='Off'
+    cam.Gain=1
+    if cam.GainAuto.GetValue()=='Continuous':
+        print('Gain: Auto')
+    else:
+        print('Gain:', cam.Gain.GetValue(),'dB')
+        
+    # Set trigger options; Trigger action, FrameStart takes a single shot
+    cam.TriggerSelector='FrameStart'
+    if cam.TriggerSelector.GetValue()=='FrameStart':
+        print('Frame Trigger: Single')
+    elif cam.TriggerSelector.GetValue()=='FrameBurstStart':
+        print('Frame Trigger:')
+    else:
+        print()
+    # Set trigger to on, default (off) is free-mode
+    cam.TriggerMode='On'
+    # Set Line 3 or 4 to input for trigger, Line 1 is only input so is not required
+    #cam.LineSelector='Line3'
+    #cam.LineMode='Input' 
+    # Set trigger source
+    cam.TriggerSource='Line1'
+    print('Trigger Source:',cam.TriggerSource.GetValue())
+    # Set edge to trigger on
+    cam.TriggerActivation='RisingEdge'
+    print('Trigger Activation:',cam.TriggerActivation.GetValue())
+    
+    # Set mode for exposure, automatic or a specified time
+    cam.ExposureAuto='Off'
+    # When hardwire triggering, the exposure mode must be set to Timed, even with continuous auto
+    cam.ExposureMode='TriggerWidth'
+    # Set exposure time, in microseconds, if using Timed mode
+    #cam.ExposureTime=1500
+    if cam.ExposureAuto.GetValue()=='Continuous':
+        print('Exposure: Auto')
+    elif cam.ExposureMode.GetValue()=='TriggerWidth':
+        print('Exposure: Trigger')
+    elif cam.ExposureMode.GetValue()=='Timed':
+        print('Exposure Time:', cam.ExposureTime.GetValue(),'us')
+    else:
+        print()
+    sprint("Waiting for trigger...")    
+    
+    #Numbering for images so image always saved even when files already in Images folder
+    dirInfo = os.listdir(savepath)    
+    sizeDirInfo = len(dirInfo)
 
+
+    if sizeDirInfo == 0:
+        lastImageNum = 1
+    else:
+        lastImageName = dirInfo[(sizeDirInfo-1)]
+        lastImageNum = float(lastImageName[15:20])
+        
+    acquire_img.image_no = lastImageNum + 1
+    
+    # Saving images.
+    try:
+    # Starts acquisition and camera waits for frame trigger
+        cam.AcquisitionStart.Execute()
+
+    # Start grabbing of images, unlimited amount, default type is continuous acquisition
+        cam.StartGrabbing()
+        # RetrieveResult will timeout after a specified time, in ms, so set much larger than the time of a cycle
+        with cam.RetrieveResult(100000000) as result:
+    
+            # Calling AttachGrabResultBuffer creates another reference to the
+            # grab result buffer. This prevents the buffer's reuse for grabbing.
+            
+            img.AttachGrabResultBuffer(result)
+                
+            filename = savepath + folder_date + "-img_%05d_a.png" % (lastImageNum + 1)
+            # Save image to
+            img.Save(pylon.ImageFileFormat_Png, filename)
+            
+            print(filename)
+            # In order to make it possible to reuse the grab result for grabbing
+            # again, we have to release the image (effectively emptying the
+            # image object).
+            img.Release()
+            acquire_img.img_at = cv2.imread(filename,0) # With atom
+           
+        with cam.RetrieveResult(2000) as result2:   
+            # Calling AttachGrabResultBuffer creates another reference to the
+            # grab result buffer. This prevents the buffer's reuse for grabbing.
+
+            img.AttachGrabResultBuffer(result2)
+            
+            filename = savepath + folder_date + "-img_%05d_b.png" % (lastImageNum + 1)
+            # Save image to
+            img.Save(pylon.ImageFileFormat_Png, filename)
+            print(filename)
+            # In order to make it possible to reuse the grab result for grabbing
+            # again, we have to release the image (effectively emptying the
+            # image object).
+            img.Release()
+            acquire_img.img_las = cv2.imread(filename,0) # Laser alone
+            
+        with cam.RetrieveResult(2000) as result3:   
+            # Calling AttachGrabResultBuffer creates another reference to the
+            # grab result buffer. This prevents the buffer's reuse for grabbing.
+            
+            img.AttachGrabResultBuffer(result3)
+            
+            filename = savepath + folder_date + "-img_%05d_c.png" % (lastImageNum + 1)
+            # Save image to
+            img.Save(pylon.ImageFileFormat_Png, filename)
+            print(filename)
+            # In order to make it possible to reuse the grab result for grabbing
+            # again, we have to release the image (effectively emptying the
+            # image object).
+            img.Release()
+            acquire_img.img_bck = cv2.imread(filename,0) # Background
+            
+        cam.StopGrabbing()
+        cam.Close()
+          
+    except genicam.GenericException as e:
+        # Error handling.
+            print("An error occured. Restarting...")
+
+#%%%
+def proc_im():
+    img_at = acquire_img.img_at                    
+    img_las = acquire_img.img_las
+    img_bck = acquire_img.img_bck
+    
+    image_no = acquire_img.image_no
             
 ### Creation of the 2D array of optical depths
-
 # Substraction of the background
-
+    img_las = img_las - img_bck
+    img_at = img_at -img_bck
     ###Correction of the zeros
-    imin = np.min(img_at[img_at > 0])
+    imin = min(np.min(img_las[img_las > 0]), np.min(img_at[img_at > 0]))
+    img_las[img_las <= 0] = imin
+    img_at[img_at <= 0] = imin
     # a = np.asarray(img_las)
     # b = np.asarray(img_at)
     # c = a/((b.astype('float')+1)/256)
@@ -127,7 +271,7 @@ def batch_proc():
     # OD=e
     #OD = np.divide(img_at,img_las)
     # Calculation of the optical depth
-    OD = img_at
+    OD = np.log(np.divide(img_las,img_at))
     print("OD done") 
     # print(OD[1200,700])
     # Negative transformation if gaussian value < background
@@ -209,7 +353,6 @@ def batch_proc():
     plt.imshow(OD)
     plt.colorbar()
     fit_xl = gaus(x, *cross_x_fit)
-    
     plt.subplot(2,3,4)
     plt.title("Fitting on x-axis")
     plt.xlabel("Pixels")
@@ -255,18 +398,18 @@ def batch_proc():
     sigma_x = cross_x_fit[3]*px_eff
     sigma_z = cross_z_fit[3]*px_eff     
     N_OD = 2*ODpk*pi*sigma_x*sigma_z/sigmatotal
-    
+
     x_center = np.where(fit_xl==np.max(fit_xl))[0][0]
     z_center = np.where(fit_zl==np.max(fit_zl))[0][0]
-                        
+
     areax = np.sum(sum_x-imin)
     areaz = np.sum(sum_z-imin)
     Nx = areax*px_size**2/sigmatotal
     Nz = areaz*px_size**2/sigmatotal
     Npxsum = ROI_sum*px_size**2/sigmatotal
-    
+
     plt.subplot(2,3,3)
-    plt.text(-0.1, 0.9, "Image #: %05s" % (image_no), fontsize=30)
+    plt.text(-0.1, 0.9, "Image #: %05d" % (image_no), fontsize=30)
     plt.text(-0.1, 0.8, "Date: " +folder_date, fontsize=30)
     plt.text(-0.1, 0.6, "Important Parameters", fontsize=20, )
     plt.text(-0.1, 0.50, "Peak OD = " + str(round(ODpk,3)), fontsize=15)
@@ -281,10 +424,11 @@ def batch_proc():
     plt.axis('off')
                
        #save image
-    filename = savepath + folder_date + "-img_%05s_d.png" % (image_no)
+    filename = savepath + folder_date + "-img_%05d_d.png" % (image_no)
     plt.savefig(filename, dpi=300, bbox_inches='tight' ) 
     # os.system(filename)
-    print(image)
+     
+
       #%% Export parameters of interest
     timeofflight = image*2/1000 
     headline = ['Image #', 'filename','Time of Flight','X Center','Z Center','sigma_x','sigma_z','ROI X','ROI Z',"N_OD","N_x","N_z","N_pxsum","Peak OD"]
@@ -305,7 +449,9 @@ def batch_proc():
         writer.writerow(parameters)
 
 #%%
-for image in range(len(batch_no)):
-    image_no = batch_no[image]
-    batch_proc()
+for image in range(num_run):
+    acquire_img()
+    proc_im()
     plt.show()
+    print("Sequence complete. Starting next run...")
+            

@@ -166,7 +166,7 @@ def acquire_img():
         print('Exposure Time:', cam.ExposureTime.GetValue(),'us')
     else:
         print()
-        
+    print("Waiting for trigger...")    
     #Numbering for images so image always saved even when files already in Images folder
     dirInfo = os.listdir(savepath)    
     sizeDirInfo = len(dirInfo)
@@ -195,7 +195,7 @@ def acquire_img():
             
             img.AttachGrabResultBuffer(result)
                 
-            filename = savepath + folder_date + "-img_%05d_a.png" % (lastImageNum + 1)
+            filename = savepath + folder_date + "-img_%05d_processed_fl.png" % (lastImageNum + 1)
             # Save image to
             img.Save(pylon.ImageFileFormat_Png, filename)
             
@@ -206,37 +206,7 @@ def acquire_img():
             img.Release()
             acquire_img.img_at = cv2.imread(filename,0) # With atom
            
-        with cam.RetrieveResult(2000) as result2:   
-            # Calling AttachGrabResultBuffer creates another reference to the
-            # grab result buffer. This prevents the buffer's reuse for grabbing.
-
-            img.AttachGrabResultBuffer(result2)
-            
-            filename = savepath + folder_date + "-img_%05d_b.png" % (lastImageNum + 1)
-            # Save image to
-            img.Save(pylon.ImageFileFormat_Png, filename)
-            print(filename)
-            # In order to make it possible to reuse the grab result for grabbing
-            # again, we have to release the image (effectively emptying the
-            # image object).
-            img.Release()
-            acquire_img.img_las = cv2.imread(filename,0) # Laser alone
-            
-        with cam.RetrieveResult(2000) as result3:   
-            # Calling AttachGrabResultBuffer creates another reference to the
-            # grab result buffer. This prevents the buffer's reuse for grabbing.
-            
-            img.AttachGrabResultBuffer(result3)
-            
-            filename = savepath + folder_date + "-img_%05d_c.png" % (lastImageNum + 1)
-            # Save image to
-            img.Save(pylon.ImageFileFormat_Png, filename)
-            print(filename)
-            # In order to make it possible to reuse the grab result for grabbing
-            # again, we have to release the image (effectively emptying the
-            # image object).
-            img.Release()
-            acquire_img.img_bck = cv2.imread(filename,0) # Background
+        
             
         cam.StopGrabbing()
         cam.Close()
@@ -248,18 +218,13 @@ def acquire_img():
 #%%%
 def proc_im():
     img_at = acquire_img.img_at                    
-    img_las = acquire_img.img_las
-    img_bck = acquire_img.img_bck
     
     image_no = acquire_img.image_no
             
 ### Creation of the 2D array of optical depths
 # Substraction of the background
-    img_las = img_las - img_bck
-    img_at = img_at -img_bck
     ###Correction of the zeros
-    imin = min(np.min(img_las[img_las > 0]), np.min(img_at[img_at > 0]))
-    img_las[img_las <= 0] = imin
+    imin = np.min(img_at[img_at > 0])
     img_at[img_at <= 0] = imin
     # a = np.asarray(img_las)
     # b = np.asarray(img_at)
@@ -270,7 +235,7 @@ def proc_im():
     # OD=e
     #OD = np.divide(img_at,img_las)
     # Calculation of the optical depth
-    OD = np.log(np.divide(img_las,img_at))
+    OD = img_at
     print("OD done") 
     # print(OD[1200,700])
     # Negative transformation if gaussian value < background
@@ -420,6 +385,8 @@ def proc_im():
     plt.text(-0.1, -0.10, "$N_{px sum}$ =  " + str(round(Npxsum/(10**6),1)) + "$*10^{6}$ atoms", fontsize=15)
     plt.text(-0.1, -0.20, "X Center = " + str(x_center) +" px", fontsize=15)
     plt.text(-0.1, -0.30, "Z Center = " + str(z_center) +" px", fontsize=15)
+    plt.text(-0.1, -0.40, "Kindly ignore OD calculations!", fontsize=30)
+
     plt.axis('off')
                
        #save image
@@ -451,5 +418,6 @@ def proc_im():
 for image in range(num_run):
     acquire_img()
     proc_im()
-    plt.show
+    plt.show()
+    print("Sequence complete. Starting next run...")
             
