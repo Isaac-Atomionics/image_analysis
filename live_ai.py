@@ -166,7 +166,7 @@ def acquire_img():
         print('Exposure Time:', cam.ExposureTime.GetValue(),'us')
     else:
         print()
-    sprint("Waiting for trigger...")    
+    print("Waiting for trigger...")    
     
     #Numbering for images so image always saved even when files already in Images folder
     dirInfo = os.listdir(savepath)    

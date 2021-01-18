@@ -72,9 +72,9 @@ elif isotope == 87:
     
 ### Supposedly imported from the GUI 
 
-px_size = 5.5e-6
+px_size = 3.75e-6
 binning = 1
-magnif = 0.38
+magnif = 1.067
 px = px_size*binning
 px_eff = px/magnif
 tof =40e3
