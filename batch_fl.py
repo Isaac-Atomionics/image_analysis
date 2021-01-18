@@ -204,15 +204,15 @@ def batch_proc():
     plt.figure(figsize=(15,10))
     plt.subplot(2,3,5)
     plt.title("Colour Unscaled")
-    plt.xlabel("Pixels")
-    plt.ylabel("Pixels")
+    plt.xlabel("Position (px)")
+    plt.ylabel("Position (px)")
     plt.imshow(OD)
     plt.colorbar()
     fit_xl = gaus(x, *cross_x_fit)
     
     plt.subplot(2,3,4)
     plt.title("Fitting on x-axis")
-    plt.xlabel("Pixels")
+    plt.xlabel("Position (px)")
     plt.ylabel("OD")
     xpixels=np.linspace(ROI_x_start,ROI_x_end,ROI_x_size)
     plt.plot(xpixels,cross_x,'--b')
@@ -220,7 +220,7 @@ def batch_proc():
       
     fit_zl = gaus(z, *cross_z_fit)
     plt.subplot(2,3,2)
-    plt.xlabel("Pixels")
+    plt.xlabel("Position (px)")
     plt.ylabel("OD")
     plt.title("Fitting on z-axis")
     zpixels=np.linspace(ROI_z_start,ROI_z_end,ROI_z_size)
@@ -229,8 +229,8 @@ def batch_proc():
      
     plt.subplot(2,3,1)
     plt.title("Colour Scaled \n OD ROI_Sum = %i"  %ROI_sum,  fontsize=12)
-    plt.xlabel("Pixels")
-    plt.ylabel("Pixels")
+    plt.xlabel("Position (px)")
+    plt.ylabel("Position (px)")
     plt.plot(points_x, points_z, linestyle='dashed',linewidth=0.5, color='red')
     plt.plot(points_x2, points_z2, linestyle='dashed',linewidth=0.5, color='red')
     plt.plot([ROI_x_start,ROI_x_end], [ROI_z_start,ROI_z_start], linestyle='solid',linewidth=0.5, color='red')
@@ -256,8 +256,8 @@ def batch_proc():
     sigma_z = cross_z_fit[3]*px_eff     
     N_OD = 2*ODpk*pi*sigma_x*sigma_z/sigmatotal
     
-    x_center = np.where(fit_xl==np.max(fit_xl))[0][0]
-    z_center = np.where(fit_zl==np.max(fit_zl))[0][0]
+    x_center = np.where(fit_xl==np.max(fit_xl))[0][0]+ROI_x[0]
+    z_center = np.where(fit_zl==np.max(fit_zl))[0][0]+ROI_z[0]
                         
     areax = np.sum(sum_x-imin)
     areaz = np.sum(sum_z-imin)
